@@ -1,0 +1,10 @@
+flask
+gunicorn
+streamlit
+chromadb
+bcrypt
+pypdf
+sentence-transformers
+langchain
+numpy
+scikit-learn
