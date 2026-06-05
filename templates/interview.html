@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Interview Session</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#dff1ff;
+            padding:20px;
+            color:#333;
+        }
+
+        .header{
+            background:white;
+            padding:15px 25px;
+            border-radius:10px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .header a{
+            text-decoration:none;
+            color:#333;
+            font-weight:bold;
+        }
+
+        .container{
+            max-width:800px;
+            margin:auto;
+            background:white;
+            padding:30px;
+            border-radius:10px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .question-count{
+            margin-bottom:20px;
+            color:#666;
+        }
+
+        .question-box{
+            background:#f5f9ff;
+            padding:20px;
+            border-radius:8px;
+            margin-bottom:20px;
+        }
+
+        textarea{
+            width:100%;
+            height:150px;
+            padding:12px;
+            border:1px solid #ccc;
+            border-radius:5px;
+            resize:none;
+            outline:none;
+            margin-bottom:15px;
+        }
+
+        textarea:focus{
+            border-color:#4da6ff;
+        }
+
+        button{
+            background:#4da6ff;
+            color:white;
+            border:none;
+            padding:10px 20px;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#3399ff;
+        }
+
+        .feedback-box{
+            margin-top:20px;
+            padding:20px;
+            border-radius:8px;
+            background:#f7fbff;
+            display:none;
+        }
+
+        .feedback-box.active{
+            display:block;
+        }
+
+        .feedback-box p{
+            margin-top:10px;
+            line-height:1.5;
+        }
+
+        .summary-box{
+            display:none;
+            text-align:center;
+        }
+
+        .summary-box.active{
+            display:block;
+        }
+
+        .score{
+            font-size:30px;
+            margin:20px 0;
+            color:#0066cc;
+        }
+
+        .back-btn{
+            display:inline-block;
+            margin-top:20px;
+            text-decoration:none;
+            background:#4da6ff;
+            color:white;
+            padding:10px 20px;
+            border-radius:5px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+    <a href="/dashboard">
+        AI Mock Interview
+    </a>
+
+    <div>
+        {{ role }} at {{ company }}
+    </div>
+
+</div>
+
+<div class="container"
+     id="interviewScreen">
+
+    <div class="question-count"
+         id="questionStepLabel">
+
+        Question 1 of 3
+
+    </div>
+
+    <div class="question-box">
+
+        <h3>Question</h3>
+
+        <p id="interviewerText">
+            Loading question...
+        </p>
+
+    </div>
+
+    <textarea id="userResponse"
+              placeholder="Write your answer here..."
+              disabled></textarea>
+
+    <button id="btnSubmit"
+            disabled>
+
+        Submit Answer
+
+    </button>
+
+    <div class="feedback-box"
+         id="evaluationDrawer">
+
+        <h3 id="feedbackScore">
+            Score: 0/10
+        </h3>
+
+        <p>
+            <strong>Verdict:</strong>
+            <span id="feedbackVerdict"></span>
+        </p>
+
+        <p>
+            <strong>Strong Points:</strong>
+            <span id="feedbackStrengths"></span>
+        </p>
+
+        <p id="feedbackGapsRow">
+            <strong>Gaps:</strong>
+            <span id="feedbackGaps"></span>
+        </p>
+
+        <br>
+
+        <button id="btnNext">
+
+            Next Question
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- SUMMARY -->
+
+<div class="container summary-box"
+     id="summaryScreen">
+
+    <h2>
+        Interview Completed
+    </h2>
+
+    <div class="score"
+         id="finalScoreVal">
+
+        0/10
+
+    </div>
+
+    <h3 id="finalVerdictVal">
+        Verdict
+    </h3>
+
+    <p id="finalAssessmentText"
+       style="margin-top:20px; line-height:1.6;">
+
+        Loading feedback...
+
+    </p>
+
+    <a href="/dashboard"
+       class="back-btn">
+
+        Back to Dashboard
+
+    </a>
+
+</div>
+
+<script>
+
+const sessionId =
+"{{ session_id }}";
+
+const questions =
+{{ questions_json | safe }};
+
+let currentQIndex = 0;
+
+let isFollowUpActive = false;
+
+let currentFollowUpQuestion = "";
+
+const interviewerTextEl =
+document.getElementById('interviewerText');
+
+const userResponseInput =
+document.getElementById('userResponse');
+
+const btnSubmit =
+document.getElementById('btnSubmit');
+
+const evaluationDrawer =
+document.getElementById('evaluationDrawer');
+
+const feedbackScore =
+document.getElementById('feedbackScore');
+
+const feedbackVerdict =
+document.getElementById('feedbackVerdict');
+
+const feedbackStrengths =
+document.getElementById('feedbackStrengths');
+
+const feedbackGaps =
+document.getElementById('feedbackGaps');
+
+const feedbackGapsRow =
+document.getElementById('feedbackGapsRow');
+
+const btnNext =
+document.getElementById('btnNext');
+
+window.addEventListener('DOMContentLoaded', ()=>{
+
+    loadQuestion(0);
+
+});
+
+function loadQuestion(index){
+
+    currentQIndex = index;
+
+    isFollowUpActive = false;
+
+    evaluationDrawer.classList.remove('active');
+
+    document.getElementById('questionStepLabel')
+    .innerText =
+    `Question ${index + 1} of 3`;
+
+    interviewerTextEl.innerText =
+    questions[index];
+
+    userResponseInput.value = "";
+
+    userResponseInput.disabled = false;
+
+    btnSubmit.disabled = false;
+
+}
+
+btnSubmit.addEventListener('click', async ()=>{
+
+    const answer =
+    userResponseInput.value.trim();
+
+    if(!answer) return;
+
+    btnSubmit.disabled = true;
+
+    btnSubmit.innerText =
+    "Checking...";
+
+    const payload = {
+
+        session_id: sessionId,
+
+        question_index: currentQIndex,
+
+        question: isFollowUpActive
+        ? currentFollowUpQuestion
+        : questions[currentQIndex],
+
+        answer: answer,
+
+        is_follow_up: isFollowUpActive
+
+    };
+
+    try{
+
+        const response =
+        await fetch('/api/submit_answer',{
+
+            method:'POST',
+
+            headers:{
+                'Content-Type':'application/json'
+            },
+
+            body:JSON.stringify(payload)
+
+        });
+
+        const data =
+        await response.json();
+
+        if(response.ok){
+
+            displayEvaluation(data);
+
+        }else{
+
+            alert(data.error || "Error");
+
+            resetButton();
+
+        }
+
+    }catch(err){
+
+        alert(err.message);
+
+        resetButton();
+
+    }
+
+});
+
+function resetButton(){
+
+    btnSubmit.disabled = false;
+
+    btnSubmit.innerText =
+    "Submit Answer";
+
+}
+
+function displayEvaluation(data){
+
+    feedbackScore.innerText =
+    `Score: ${data.score}/10`;
+
+    feedbackVerdict.innerText =
+    data.verdict;
+
+    feedbackStrengths.innerText =
+    data.strong_points;
+
+    if(data.weak_points){
+
+        feedbackGaps.innerText =
+        data.weak_points;
+
+        feedbackGapsRow.style.display =
+        'block';
+
+    }else{
+
+        feedbackGapsRow.style.display =
+        'none';
+
+    }
+
+    evaluationDrawer.classList.add('active');
+
+    if(data.follow_up_question &&
+       !isFollowUpActive &&
+       data.score < 9){
+
+        isFollowUpActive = true;
+
+        currentFollowUpQuestion =
+        data.follow_up_question;
+
+        btnNext.style.display = 'none';
+
+        interviewerTextEl.innerText =
+        currentFollowUpQuestion;
+
+        userResponseInput.value = "";
+
+        userResponseInput.disabled = false;
+
+        btnSubmit.disabled = false;
+
+        btnSubmit.innerText =
+        "Submit Follow-up";
+
+    }else{
+
+        isFollowUpActive = false;
+
+        btnNext.style.display = 'inline-block';
+
+        userResponseInput.disabled = true;
+
+        btnSubmit.disabled = true;
+
+        btnSubmit.innerText =
+        "Submitted";
+
+        if(currentQIndex < 2){
+
+            btnNext.innerText =
+            "Next Question";
+
+            btnNext.onclick = ()=>{
+
+                loadQuestion(currentQIndex + 1);
+
+            };
+
+        }else{
+
+            btnNext.innerText =
+            "Finish Interview";
+
+            btnNext.onclick =
+            finalizeInterview;
+
+        }
+
+    }
+
+}
+
+async function finalizeInterview(){
+
+    document.getElementById('interviewScreen')
+    .style.display = 'none';
+
+    document.getElementById('summaryScreen')
+    .classList.add('active');
+
+    try{
+
+        const response =
+        await fetch(`/api/session_summary/${sessionId}`);
+
+        const data =
+        await response.json();
+
+        if(response.ok){
+
+            document.getElementById('finalScoreVal')
+            .innerText =
+            `${data.score.toFixed(1)}/10`;
+
+            document.getElementById('finalVerdictVal')
+            .innerText =
+            data.verdict;
+
+            document.getElementById('finalAssessmentText')
+            .innerText =
+            data.feedback;
+
+        }else{
+
+            document.getElementById('finalAssessmentText')
+            .innerText =
+            "Could not load summary.";
+
+        }
+
+    }catch(err){
+
+        document.getElementById('finalAssessmentText')
+        .innerText =
+        err.message;
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>

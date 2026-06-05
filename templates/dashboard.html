@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#dff1ff;
+            padding:20px;
+            color:#333;
+        }
+
+        .header{
+            background:white;
+            padding:15px 25px;
+            border-radius:10px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .header h2{
+            font-size:22px;
+        }
+
+        .logout-btn{
+            text-decoration:none;
+            background:#4da6ff;
+            color:white;
+            padding:8px 15px;
+            border-radius:5px;
+        }
+
+        .stats{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:15px;
+            margin-bottom:20px;
+        }
+
+        .card{
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .card h3{
+            font-size:16px;
+            margin-bottom:10px;
+            color:#555;
+        }
+
+        .card p{
+            font-size:24px;
+            font-weight:bold;
+        }
+
+        .section{
+            background:white;
+            padding:25px;
+            border-radius:10px;
+            margin-bottom:20px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .section h2{
+            margin-bottom:15px;
+            font-size:22px;
+        }
+
+        .skills{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-top:15px;
+        }
+
+        .skill{
+            background:#e6f3ff;
+            color:#0066cc;
+            padding:8px 12px;
+            border-radius:20px;
+            font-size:14px;
+        }
+
+        input,
+        select{
+            width:100%;
+            padding:10px;
+            margin-top:5px;
+            margin-bottom:15px;
+            border:1px solid #ccc;
+            border-radius:5px;
+            outline:none;
+        }
+
+        button{
+            background:#4da6ff;
+            color:white;
+            border:none;
+            padding:10px 20px;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#3399ff;
+        }
+
+        .history-card{
+            border:1px solid #ddd;
+            border-radius:8px;
+            padding:15px;
+            margin-top:15px;
+        }
+
+        .history-details{
+            margin-top:10px;
+            display:none;
+        }
+
+        .history-details.active{
+            display:block;
+        }
+
+        .question-box{
+            background:#f5f9ff;
+            padding:10px;
+            border-radius:5px;
+            margin-top:10px;
+        }
+
+        .alert{
+            padding:10px;
+            border-radius:5px;
+            margin-bottom:15px;
+        }
+
+        .alert-warning{
+            background:#fff4d6;
+            color:#996600;
+        }
+
+        .upload-box{
+            border:2px dashed #99ccff;
+            padding:25px;
+            border-radius:10px;
+            text-align:center;
+            background:#f7fbff;
+        }
+
+        .upload-box input{
+            margin-top:15px;
+        }
+
+        .status-pending{
+            color:orange;
+            font-weight:bold;
+        }
+
+        .status-accepted{
+            color:green;
+            font-weight:bold;
+        }
+
+        .status-rejected{
+            color:red;
+            font-weight:bold;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+
+    <h2>AI Mock Interview</h2>
+
+    <div>
+
+        Welcome,
+        <strong>{{ username }}</strong>
+
+        <a href="/logout" class="logout-btn">
+            Logout
+        </a>
+
+    </div>
+
+</div>
+
+<div class="stats">
+
+    <div class="card">
+
+        <h3>Average Rating</h3>
+
+        <p>
+            {{ "%.1f"|format(avg_score) if avg_score else "N/A" }}
+        </p>
+
+    </div>
+
+    <div class="card">
+
+        <h3>Sessions Completed</h3>
+
+        <p>{{ completed_count }}</p>
+
+    </div>
+
+    <div class="card">
+
+        <h3>Skills</h3>
+
+        <p>
+            {{ parsed_skills|length if parsed_skills else 0 }}
+        </p>
+
+    </div>
+
+</div>
+
+<!-- RESUME SECTION -->
+
+<div class="section">
+
+    {% if parsed_skills %}
+
+    <h2>Resume Skills</h2>
+
+    <p>Your uploaded skills:</p>
+
+    <div class="skills">
+
+        {% for skill in parsed_skills %}
+
+        <div class="skill">
+
+            {{ skill }}
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <br>
+
+    <button id="btnUpdateResume">
+
+        Update Resume
+
+    </button>
+
+    {% endif %}
+
+    <div id="resumeUploadView"
+
+         {% if parsed_skills %}
+         style="display:none;"
+         {% endif %}>
+
+        <h2>Upload Resume</h2>
+
+        <div class="upload-box">
+
+            <p>Upload PDF, DOCX or TXT file</p>
+
+            <input type="file"
+                   id="resumeFileInput"
+                   accept=".pdf,.docx,.txt">
+
+        </div>
+
+        <br>
+
+        <button id="btnCompile" disabled>
+
+            Upload Resume
+
+        </button>
+
+        <div id="uploadFeedback"></div>
+
+    </div>
+
+</div>
+
+<!-- START INTERVIEW -->
+
+<div class="section">
+
+    <h2>Start Interview</h2>
+
+    <form action="/start_interview" method="POST">
+
+        <label>Target Role</label>
+
+        <select name="role" required>
+
+            <option value="Backend Developer">
+                Backend Developer
+            </option>
+
+            <option value="Frontend Developer">
+                Frontend Developer
+            </option>
+
+            <option value="Machine Learning Engineer">
+                Machine Learning Engineer
+            </option>
+
+            <option value="Data Scientist">
+                Data Scientist
+            </option>
+
+            <option value="DevOps Engineer">
+                DevOps Engineer
+            </option>
+
+            <option value="Full Stack Developer">
+                Full Stack Developer
+            </option>
+
+        </select>
+
+        <label>Company</label>
+
+        <input type="text"
+               name="company"
+               placeholder="Enter company name"
+               required>
+
+        {% if not parsed_skills %}
+
+        <div class="alert alert-warning">
+
+            Upload resume first to start interview.
+
+        </div>
+
+        {% endif %}
+
+        <button type="submit"
+
+                {% if not parsed_skills %}
+                disabled
+                {% endif %}>
+
+            Start Interview
+
+        </button>
+
+    </form>
+
+</div>
+
+<!-- INTERNSHIP ALERTS -->
+
+{% if recommended_jobs %}
+
+<div class="section">
+
+    <h2>Internship Alerts</h2>
+
+    <p>
+        Matching internships based on your resume skills
+    </p>
+
+    <br>
+
+    {% for job in recommended_jobs %}
+
+    <div class="history-card">
+
+        <h3>{{ job.role }}</h3>
+
+        <br>
+
+        <strong>Company:</strong>
+
+        {{ job.company }}
+
+        <br><br>
+
+        <strong>Required Skills:</strong>
+
+        <div class="skills">
+
+            {% for skill in job.skills.split() %}
+
+            <div class="skill">
+
+                {{ skill }}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% if job.description %}
+
+        <br>
+
+        <strong>Description:</strong>
+
+        <p style="margin-top:8px; line-height:1.5;">
+
+            {{ job.description }}
+
+        </p>
+
+        {% endif %}
+
+        <br>
+
+        {% set found = namespace(applied=false, status="") %}
+
+        {% for app in applied_jobs %}
+
+            {% if app.internship_id == job.id %}
+
+                {% set found.applied = true %}
+                {% set found.status = app.status %}
+
+            {% endif %}
+
+        {% endfor %}
+
+        {% if found.applied %}
+
+            <button disabled
+                    style="background:#999;cursor:not-allowed;">
+
+                Applied
+
+            </button>
+
+            <br><br>
+
+            <strong>Status:</strong>
+
+            {% if found.status == "Accepted" %}
+
+                <span class="status-accepted">
+
+                    Accepted
+
+                </span>
+
+            {% elif found.status == "Rejected" %}
+
+                <span class="status-rejected">
+
+                    Rejected
+
+                </span>
+
+            {% else %}
+
+                <span class="status-pending">
+
+                    Pending
+
+                </span>
+
+            {% endif %}
+
+        {% else %}
+
+            <button
+                onclick="applyInternship('{{ job.id }}')">
+
+                Apply Now
+
+            </button>
+
+        {% endif %}
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
+<!-- HISTORY -->
+
+<div class="section">
+
+    <h2>Interview History</h2>
+
+    {% if not history %}
+
+    <p>No interviews yet.</p>
+
+    {% else %}
+
+    {% for sess in history %}
+
+    <div class="history-card"
+         onclick="toggleDetails('{{ sess.id }}')">
+
+        <strong>{{ sess.role }}</strong>
+
+        at
+
+        <strong>{{ sess.company }}</strong>
+
+        <br><br>
+
+        Score:
+        {{ "%.1f"|format(sess.score) }}/10
+
+        <div class="history-details"
+             id="details-{{ sess.id }}">
+
+            <br>
+
+            <strong>Verdict:</strong>
+
+            {{ sess.verdict }}
+
+            <br><br>
+
+            <strong>Feedback:</strong>
+
+            {{ sess.feedback }}
+
+            <br><br>
+
+            {% for qa in sess.questions %}
+
+            <div class="question-box">
+
+                <strong>Question:</strong>
+
+                {{ qa.question_text }}
+
+                <br><br>
+
+                <strong>Answer:</strong>
+
+                {{ qa.user_answer }}
+
+                <br><br>
+
+                {% if qa.feedback_text %}
+
+                <strong>Rating:</strong>
+
+                {{ qa.score }}/10
+
+                <br><br>
+
+                {{ qa.feedback_text }}
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+    {% endif %}
+
+</div>
+
+<script>
+
+function toggleDetails(sessionId){
+
+    const el =
+    document.getElementById(`details-${sessionId}`);
+
+    el.classList.toggle('active');
+
+}
+
+const btnUpdateResume =
+document.getElementById('btnUpdateResume');
+
+const resumeUploadView =
+document.getElementById('resumeUploadView');
+
+if(btnUpdateResume){
+
+    btnUpdateResume.addEventListener('click', ()=>{
+
+        resumeUploadView.style.display='block';
+
+    });
+
+}
+
+const resumeFileInput =
+document.getElementById('resumeFileInput');
+
+const btnCompile =
+document.getElementById('btnCompile');
+
+let selectedFile = null;
+
+resumeFileInput.addEventListener('change',(e)=>{
+
+    if(e.target.files.length>0){
+
+        selectedFile = e.target.files[0];
+
+        btnCompile.disabled = false;
+
+    }
+
+});
+
+btnCompile.addEventListener('click', async ()=>{
+
+    if(!selectedFile) return;
+
+    const formData = new FormData();
+
+    formData.append('resume_file', selectedFile);
+
+    const uploadFeedback =
+    document.getElementById('uploadFeedback');
+
+    uploadFeedback.innerHTML =
+    "Uploading...";
+
+    try{
+
+        const response =
+        await fetch('/api/upload_resume',{
+
+            method:'POST',
+            body:formData
+
+        });
+
+        const data =
+        await response.json();
+
+        if(response.ok){
+
+            uploadFeedback.innerHTML =
+            "Resume uploaded successfully.";
+
+            setTimeout(()=>{
+
+                window.location.reload();
+
+            },1000);
+
+        }else{
+
+            uploadFeedback.innerHTML =
+            data.error || "Upload failed.";
+
+        }
+
+    }catch(error){
+
+        uploadFeedback.innerHTML =
+        "Server error.";
+
+    }
+
+});
+
+async function applyInternship(jobId){
+
+    try{
+
+        const response =
+        await fetch(`/apply/${jobId}`);
+
+        if(response.ok){
+
+            window.location.reload();
+
+        }else{
+
+            alert("Application failed.");
+
+        }
+
+    }catch(err){
+
+        alert("Server error.");
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>

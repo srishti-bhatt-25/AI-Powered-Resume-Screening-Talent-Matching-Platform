@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login / Register</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#dff1ff;
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .container{
+            width:350px;
+            background:white;
+            padding:30px;
+            border-radius:10px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2{
+            text-align:center;
+            margin-bottom:20px;
+            color:#333;
+        }
+
+        .form-group{
+            margin-bottom:15px;
+        }
+
+        label{
+            display:block;
+            margin-bottom:5px;
+            color:#444;
+            font-size:14px;
+        }
+
+        input,
+        select{
+            width:100%;
+            padding:10px;
+            border:1px solid #ccc;
+            border-radius:5px;
+            outline:none;
+        }
+
+        input:focus,
+        select:focus{
+            border-color:#4da6ff;
+        }
+
+        button{
+            width:100%;
+            padding:10px;
+            background:#4da6ff;
+            border:none;
+            color:white;
+            border-radius:5px;
+            cursor:pointer;
+            margin-top:10px;
+        }
+
+        button:hover{
+            background:#3399ff;
+        }
+
+        .bottom-text{
+            text-align:center;
+            margin-top:15px;
+            font-size:14px;
+        }
+
+        .bottom-text a{
+            color:#3399ff;
+            text-decoration:none;
+        }
+
+        .hidden{
+            display:none;
+        }
+
+        .alert{
+            padding:10px;
+            margin-bottom:15px;
+            border-radius:5px;
+            font-size:14px;
+        }
+
+        .alert-danger{
+            background:#ffdede;
+            color:#cc0000;
+        }
+
+        .alert-success{
+            background:#ddffdd;
+            color:#008000;
+        }
+
+        .remember-row{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-size:14px;
+            color:#444;
+        }
+
+        .remember-row input{
+            width:auto;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- LOGIN -->
+
+    <div id="loginBox">
+
+        <h2>Login</h2>
+
+        {% if error %}
+        <div class="alert alert-danger">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if message %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+        {% endif %}
+
+        <form action="/login"
+              method="POST"
+              id="loginForm">
+
+            <div class="form-group">
+
+                <label>Username</label>
+
+                <input type="text"
+                       name="username"
+                       id="loginUsername"
+                       placeholder="Enter username"
+                       required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Password</label>
+
+                <input type="password"
+                       name="password"
+                       id="loginPassword"
+                       placeholder="Enter password"
+                       required>
+
+            </div>
+
+            <div class="form-group remember-row">
+
+                <input type="checkbox"
+                       id="rememberMe">
+
+                <span>Remember me</span>
+
+            </div>
+
+            <button type="submit">
+                Login
+            </button>
+
+        </form>
+
+        <div class="bottom-text">
+
+            Don't have an account?
+
+            <a href="#"
+               id="showRegister">
+
+               Register
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- REGISTER -->
+
+    <div id="registerBox"
+         class="hidden">
+
+        <h2>Register</h2>
+
+        <form action="/register"
+              method="POST">
+
+            <div class="form-group">
+
+                <label>Username</label>
+
+                <input type="text"
+                       name="username"
+                       placeholder="Choose username"
+                       required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Password</label>
+
+                <input type="password"
+                       name="password"
+                       placeholder="Create password"
+                       required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Confirm Password</label>
+
+                <input type="password"
+                       name="confirm_password"
+                       placeholder="Confirm password"
+                       required>
+
+            </div>
+
+            <!-- ROLE -->
+
+            <div class="form-group">
+
+                <label>Select Role</label>
+
+                <select name="role"
+                        required>
+
+                    <option value="candidate">
+                        Candidate
+                    </option>
+
+                    <option value="hr">
+                        HR
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- LINKEDIN -->
+
+            <div class="form-group">
+
+                <label>LinkedIn Profile URL</label>
+
+                <input type="text"
+                       name="linkedin"
+                       placeholder="https://linkedin.com/in/yourprofile"
+                       required>
+
+            </div>
+
+            <button type="submit">
+                Register
+            </button>
+
+        </form>
+
+        <div class="bottom-text">
+
+            Already have an account?
+
+            <a href="#"
+               id="showLogin">
+
+               Login
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const loginBox =
+document.getElementById("loginBox");
+
+const registerBox =
+document.getElementById("registerBox");
+
+document.getElementById("showRegister")
+.addEventListener("click", function(e){
+
+    e.preventDefault();
+
+    loginBox.classList.add("hidden");
+
+    registerBox.classList.remove("hidden");
+
+});
+
+document.getElementById("showLogin")
+.addEventListener("click", function(e){
+
+    e.preventDefault();
+
+    registerBox.classList.add("hidden");
+
+    loginBox.classList.remove("hidden");
+
+});
+
+const loginForm =
+document.getElementById('loginForm');
+
+const loginUsernameInput =
+document.getElementById('loginUsername');
+
+const loginPasswordInput =
+document.getElementById('loginPassword');
+
+const rememberMeCheckbox =
+document.getElementById('rememberMe');
+
+window.addEventListener('DOMContentLoaded', () => {
+
+    const rememberedUser =
+    localStorage.getItem('remembered_username');
+
+    const rememberedPass =
+    localStorage.getItem('remembered_password');
+
+    if (rememberedUser) {
+
+        loginUsernameInput.value =
+        rememberedUser;
+
+        rememberMeCheckbox.checked =
+        true;
+
+    }
+
+    if (rememberedPass) {
+
+        loginPasswordInput.value =
+        rememberedPass;
+
+    }
+
+});
+
+loginForm.addEventListener('submit', () => {
+
+    if (rememberMeCheckbox.checked) {
+
+        localStorage.setItem(
+            'remembered_username',
+            loginUsernameInput.value
+        );
+
+        localStorage.setItem(
+            'remembered_password',
+            loginPasswordInput.value
+        );
+
+    } else {
+
+        localStorage.removeItem(
+            'remembered_username'
+        );
+
+        localStorage.removeItem(
+            'remembered_password'
+        );
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
