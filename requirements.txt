@@ -8,3 +8,9 @@ sentence-transformers
 langchain
 numpy
 scikit-learn
+flask
+pymupdf
+google-genai
+chromadb
+sentence-transformers
+flask-cors
